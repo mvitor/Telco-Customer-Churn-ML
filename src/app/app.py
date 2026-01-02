@@ -4,6 +4,13 @@ import gradio as gr
 import os
 import sys
 
+import logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# Then use:
+
+
 # Ensure we can import from src/serving when running "uvicorn src.app.app:app"
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
@@ -39,7 +46,9 @@ class CustomerData(BaseModel):
 @app.post("/predict")
 def api_predict(data: CustomerData):
     try:
+        logger.info (f"data:{data}")
         out = predict(data.dict())
+        logger.info (f"out:{out}")
         return {"prediction": out}
     except Exception as e:
         return {"error": str(e)}
@@ -51,28 +60,45 @@ def gradio_interface(
     TechSupport, StreamingTV, StreamingMovies, Contract,
     PaperlessBilling, PaymentMethod, tenure, MonthlyCharges, TotalCharges
 ):
-    payload = {
-        "gender": gender,
-        "Partner": Partner,
-        "Dependents": Dependents,
-        "PhoneService": PhoneService,
-        "MultipleLines": MultipleLines,
-        "InternetService": InternetService,
-        "OnlineSecurity": OnlineSecurity,
-        "OnlineBackup": OnlineBackup,
-        "DeviceProtection": DeviceProtection,
-        "TechSupport": TechSupport,
-        "StreamingTV": StreamingTV,
-        "StreamingMovies": StreamingMovies,
-        "Contract": Contract,
-        "PaperlessBilling": PaperlessBilling,
-        "PaymentMethod": PaymentMethod,
-        "tenure": int(tenure),
-        "MonthlyCharges": float(MonthlyCharges),
-        "TotalCharges": float(TotalCharges),
-    }
-    out = predict(payload)
-    return str(out)
+    # First thing - write to file to confirm function is called
+    with open("/tmp/gradio_debug.log", "a") as f:
+        f.write(f"Function called at {__import__('datetime').datetime.now()}\n")
+    
+    try:
+        payload = {
+            "gender": gender,
+            "Partner": Partner,
+            "Dependents": Dependents,
+            "PhoneService": PhoneService,
+            "MultipleLines": MultipleLines,
+            "InternetService": InternetService,
+            "OnlineSecurity": OnlineSecurity,
+            "OnlineBackup": OnlineBackup,
+            "DeviceProtection": DeviceProtection,
+            "TechSupport": TechSupport,
+            "StreamingTV": StreamingTV,
+            "StreamingMovies": StreamingMovies,
+            "Contract": Contract,
+            "PaperlessBilling": PaperlessBilling,
+            "PaymentMethod": PaymentMethod,
+            "tenure": int(tenure),
+            "MonthlyCharges": float(MonthlyCharges),
+            "TotalCharges": float(TotalCharges),
+        }
+        print(f"PAYLOAD: {payload}", flush=True)
+        import sys
+        print(f"PAYLOAD: {payload}", file=sys.stderr, flush=True)
+        out = predict(payload)
+        print(f"OUTPUT: {out}", flush=True)
+        with open("/tmp/gradio_debug.log", "a") as f:
+            f.write(f"Called at {__import__('datetime').datetime.now()}\n")
+        return str(out)
+
+    except Exception as e:
+        print(f"ERROR: {e}", flush=True)
+        import traceback
+        traceback.print_exc()
+        return f"Error: {e}"
 
 demo = gr.Interface(
     fn=gradio_interface,

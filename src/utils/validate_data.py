@@ -1,6 +1,6 @@
 import great_expectations as ge
 from typing import Tuple, List
-
+import pandas as pd
 
 def validate_telco_data(df) -> Tuple[bool, List[str]]:
     """
@@ -14,7 +14,10 @@ def validate_telco_data(df) -> Tuple[bool, List[str]]:
     print("🔍 Starting data validation with Great Expectations...")
     
     # Convert pandas DataFrame to Great Expectations Dataset
-    ge_df = ge.dataset.PandasDataset(df)
+    #ge_df = ge.dataset.PandasDataset(df)
+    df['TotalCharges'] = pd.to_numeric(df['TotalCharges'], errors='coerce')
+
+    ge_df = ge.from_pandas(df)
     
     # === SCHEMA VALIDATION - ESSENTIAL COLUMNS ===
     print("   📋 Validating schema and required columns...")
